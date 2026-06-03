@@ -21,9 +21,9 @@ const MAX_CAPTURE_BYTES = 1024 * 1024; // 1 MiB
  *      (covers sleep()/blocking-IO that doesn't burn CPU).
  *   4. cwd is an isolated temp dir owned by the runner; a minimal env is passed.
  *
- * Phase 2 (hardening on Fly.io) swaps the bash+ulimit wrapper for `isolate`
- * (namespaces + cgroups + no network). The signature of run() stays the same,
- * so callers in judge.ts don't change.
+ * Phase 2 (hardening, for untrusted users) swaps the bash+ulimit wrapper for
+ * `isolate` (namespaces + cgroups + no network), ideally on a micro-VM host.
+ * The signature of run() stays the same, so callers in judge.ts don't change.
  */
 export function run(opts: {
   command: string;      // e.g. "python3 main.py" or "./main"

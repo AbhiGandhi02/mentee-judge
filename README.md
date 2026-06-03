@@ -144,17 +144,33 @@ npm install
 npm test
 ```
 
-## Deploy to Fly.io
+## Deploy to Render (free tier, no credit card)
 
-```bash
-fly launch --no-deploy          # creates the app from fly.toml
-fly secrets set JUDGE_SECRET=<a-long-random-string>
-fly deploy
-```
+Render runs the Docker image **as root**, which the privilege-dropping sandbox
+requires — so it works with no code changes. A [`render.yaml`](render.yaml)
+Blueprint is included.
 
-Then in the Next.js app set:
-- `JUDGE_URL = https://<your-app>.fly.dev`
+**Dashboard (simplest):**
+1. **New → Web Service** → connect this repo.
+2. Runtime **Docker** (the `Dockerfile` is auto-detected), Instance Type **Free**,
+   Region **Singapore** (closest free region to India).
+3. **Health Check Path:** `/health`.
+4. **Environment →** add `JUDGE_SECRET` = a long random string. (Do **not** set
+   `PORT` — Render injects it and the app reads it via `src/config.ts`.)
+5. Create → first build takes a few minutes (installs g++, JDK, Python, Node).
+
+**Or via the Blueprint:** New → Blueprint → pick this repo → set `JUDGE_SECRET`
+when prompted.
+
+Then in the Next.js app (Vercel env vars) set:
+- `JUDGE_URL = https://<your-service>.onrender.com`
 - `JUDGE_SECRET = <same value>`
+
+> **Free-tier notes:** the service sleeps after ~15 min idle and cold-starts on
+> the next request (~30–60s). It's a small box (512 MB / shared CPU): Python/JS/C++
+> are comfortable; Java is the tightest fit — lower `java -Xmx` in `src/runners.ts`
+> if it OOMs. Other root-capable hosts (Fly.io, Railway, Cloud Run) work too but
+> currently require a card.
 
 ## Security model & roadmap
 
@@ -170,9 +186,10 @@ Known gaps to close before exposing to untrusted/public users:
 - **No kernel-level isolation** between submissions (shared kernel/filesystem
   view beyond the temp dir).
 
-**Phase 2 (hardening, Fly.io micro-VM)** — swap the bash+ulimit wrapper in
-`src/sandbox.ts` for [`isolate`](https://github.com/ioi/isolate) (cgroups +
-namespaces + no network). The `run()` signature stays the same, so `judge.ts`
+**Phase 2 (hardening)** — for untrusted/public users, swap the bash+ulimit
+wrapper in `src/sandbox.ts` for [`isolate`](https://github.com/ioi/isolate)
+(cgroups + namespaces + no network), and/or run on a micro-VM host
+(Fly.io / Cloud Run). The `run()` signature stays the same, so `judge.ts`
 is untouched.
 
 ## Configuration (env vars)

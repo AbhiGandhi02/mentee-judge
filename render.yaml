@@ -1,0 +1,23 @@
+# Render Blueprint for the sandboxed judge (https://render.com/docs/blueprint-spec).
+# Deploy:  Render Dashboard → New → Blueprint → pick this repo, then set the
+#          JUDGE_SECRET value when prompted (it is NOT stored in this file).
+# Note: if you already created this service manually in the dashboard, you don't
+# need a Blueprint deploy — this file just documents/reproduces the config.
+services:
+  - type: web
+    name: mentee-judge
+    runtime: docker          # builds from ./Dockerfile (runs as root, which the sandbox needs)
+    plan: free
+    region: singapore        # closest free region to India; change if you prefer
+    healthCheckPath: /health
+    autoDeploy: true         # redeploy on push to the connected branch
+    envVars:
+      # Bearer token the Next.js app must present. Set the value in the Render
+      # dashboard (sync:false keeps the secret out of the repo). Must match the
+      # JUDGE_SECRET configured in the Next.js app (Vercel).
+      - key: JUDGE_SECRET
+        sync: false
+      # Render injects PORT automatically and the app reads it (src/config.ts) —
+      # do NOT hard-code PORT here.
+      - key: WORK_ROOT
+        value: /tmp/judge-runs

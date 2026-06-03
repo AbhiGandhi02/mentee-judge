@@ -107,13 +107,25 @@ Returns `{ "ok": true }` (no auth).
 ## Run locally (Docker — required)
 
 The sandbox uses Linux `ulimit`, `timeout`, and uid/gid dropping, so it must run
-on Linux. On Windows/macOS, use Docker:
+on Linux. On Windows/macOS, use Docker.
 
+**With Docker Compose (simplest):**
+```bash
+docker compose up --build        # serves on http://localhost:8080 (Ctrl+C to stop)
+docker compose up --build -d     # background
+docker compose down              # stop & remove
+```
+`JUDGE_SECRET` defaults to `dev-secret` in `docker-compose.yml` — keep it in sync with
+the Next.js app's `JUDGE_SECRET`.
+
+**Plain Docker:**
 ```bash
 docker build -t mentee-judge .
 docker run --rm -p 8080:8080 -e JUDGE_SECRET=dev-secret mentee-judge
+```
 
-# smoke test
+**Smoke test:**
+```bash
 curl -s localhost:8080/execute \
   -H 'authorization: Bearer dev-secret' \
   -H 'content-type: application/json' \
@@ -122,6 +134,15 @@ curl -s localhost:8080/execute \
 
 For tighter isolation you can also constrain the container itself:
 `docker run --network none --pids-limit 256 --memory 512m ...`
+
+## Tests
+
+Unit tests (output comparison + Java class detection) run on the host with the
+built-in Node test runner — no Docker needed:
+```bash
+npm install
+npm test
+```
 
 ## Deploy to Fly.io
 

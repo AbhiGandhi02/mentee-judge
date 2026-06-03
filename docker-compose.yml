@@ -1,0 +1,19 @@
+# Local dev convenience: build + run the sandboxed judge on :8080.
+#   docker compose up --build      # start (Ctrl+C to stop)
+#   docker compose up --build -d   # start in background
+#   docker compose down            # stop & remove
+#
+# JUDGE_SECRET here must match JUDGE_SECRET in MENTEE_PRAC_PLATFORM/.env.local
+# (both are "dev-secret" by default).
+services:
+  judge:
+    build: .
+    image: mentee-judge
+    ports:
+      - "8080:8080"
+    environment:
+      JUDGE_SECRET: dev-secret
+    # For untrusted/public use, also isolate the container:
+    # network_mode: none      # (remove the ports mapping if you do this)
+    # pids_limit: 256
+    # mem_limit: 512m
